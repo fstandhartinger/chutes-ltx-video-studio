@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chutes LTX-2 Video Studio</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="ambient-grid"></div>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+
+    <header class="top-bar">
+      <div class="brand">
+        <span class="brand-mark">LTX-2</span>
+        <div>
+          <h1>Chutes Video Studio</h1>
+          <p>Text, image, and video-to-video generation with full LoRA control.</p>
+        </div>
+      </div>
+      <div class="auth-panel">
+        <div class="auth-meta" id="authStatus">
+          <span class="status-pill" id="authScope">Signed out</span>
+          <span class="status-user" id="authUser">Guest</span>
+        </div>
+        <div class="auth-actions">
+          <button class="btn ghost" id="loginBtn">Sign in with Chutes</button>
+          <button class="btn ghost" id="logoutBtn" hidden>Sign out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="studio">
+      <section class="hero">
+        <div>
+          <h2>Direct the shot. Dial the motion. Shape the LoRAs.</h2>
+          <p>
+            Build cinematic clips with LTX-2 using prompt-first direction, keyframe
+            interpolation, IC-LoRA control, and camera LoRAs in one studio workflow.
+          </p>
+        </div>
+        <div class="hero-badges">
+          <div class="badge">Pipeline-aware validation</div>
+          <div class="badge">LoRA stacking</div>
+          <div class="badge">Chutes IDP ready</div>
+        </div>
+      </section>
+
+      <section class="studio-grid">
+        <aside class="panel controls">
+          <div class="panel-header">
+            <h3>Director Panel</h3>
+            <span class="panel-sub">Narrative + render controls</span>
+          </div>
+
+          <label class="field">
+            <span>Prompt</span>
+            <textarea id="promptInput" placeholder="Describe the scene, motion, and mood..."></textarea>
+          </label>
+
+          <label class="field">
+            <span>Negative prompt</span>
+            <textarea id="negativePromptInput" placeholder="What should LTX-2 avoid?"></textarea>
+          </label>
+
+          <div class="field-grid">
+            <label class="field small">
+              <span>Pipeline</span>
+              <select id="pipelineSelect">
+                <option value="">Auto (two_stage or ic_lora)</option>
+                <option value="two_stage">Two-stage</option>
+                <option value="distilled">Distilled</option>
+                <option value="ic_lora">IC LoRA (video-to-video)</option>
+                <option value="keyframe_interp">Keyframe interpolation</option>
+              </select>
+            </label>
+            <label class="field small">
+              <span>Seed</span>
+              <input id="seedInput" type="number" value="42" />
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label class="field small">
+              <span>Width</span>
+              <input id="widthInput" type="number" value="768" />
+            </label>
+            <label class="field small">
+              <span>Height</span>
+              <input id="heightInput" type="number" value="512" />
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label class="field small">
+              <span>Frames</span>
+              <input id="framesInput" type="number" value="121" />
+            </label>
+            <label class="field small">
+              <span>FPS</span>
+              <input id="fpsInput" type="number" value="25" />
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label class="field small">
+              <span>Inference steps</span>
+              <input id="stepsInput" type="number" value="40" />
+            </label>
+            <label class="field small">
+              <span>CFG scale</span>
+              <input id="cfgInput" type="number" value="3" step="0.1" />
+            </label>
+          </div>
+
+          <label class="field toggle">
+            <input id="enhanceToggle" type="checkbox" />
+            <span>Enhance prompt</span>
+          </label>
+
+          <div class="metrics">
+            <div>
+              <span class="metric-label">Duration</span>
+              <span class="metric-value" id="durationLabel">4.84s</span>
+            </div>
+            <div>
+              <span class="metric-label">Work units</span>
+              <span class="metric-value" id="workUnits">4840</span>
+            </div>
+          </div>
+
+          <div class="panel-footer">
+            <button class="btn primary" id="generateBtn">Generate video</button>
+            <button class="btn ghost" id="validateBtn">Validate setup</button>
+          </div>
+          <div class="status" id="statusText">Waiting for direction.</div>
+        </aside>
+
+        <section class="panel preview">
+          <div class="panel-header">
+            <h3>Studio Canvas</h3>
+            <span class="panel-sub">Preview and timeline</span>
+          </div>
+
+          <div class="preview-window">
+            <video id="previewVideo" controls poster="" preload="metadata"></video>
+            <div class="preview-placeholder" id="previewPlaceholder">
+              <p>No render yet. Build a scene and hit generate.</p>
+            </div>
+          </div>
+
+          <div class="timeline">
+            <div class="timeline-header">
+              <h4>Keyframe storyboard</h4>
+              <button class="btn ghost" id="addKeyframeBtn">Add keyframe</button>
+              <input id="keyframeInput" type="file" accept="image/*" hidden />
+            </div>
+            <div class="timeline-list" id="keyframeList"></div>
+          </div>
+
+          <div class="conditioning">
+            <div class="conditioning-card">
+              <h4>Primary image</h4>
+              <div class="conditioning-inputs">
+                <input id="primaryImageFile" type="file" accept="image/*" />
+                <input id="primaryImageUrl" type="url" placeholder="Or paste an image URL" />
+                <div class="inline-fields">
+                  <input id="primaryFrame" type="number" placeholder="Frame" value="0" />
+                  <input id="primaryStrength" type="number" placeholder="Strength" value="1" step="0.1" />
+                </div>
+              </div>
+              <div class="conditioning-preview" id="primaryPreview"></div>
+            </div>
+
+            <div class="conditioning-card">
+              <h4>Video conditioning</h4>
+              <div class="conditioning-inputs">
+                <input id="videoFile" type="file" accept="video/*" />
+                <input id="videoUrl" type="url" placeholder="Or paste a video URL" />
+                <input id="videoStrength" type="number" placeholder="Strength" value="1" step="0.1" />
+              </div>
+              <div class="conditioning-preview" id="videoPreview"></div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel loras">
+          <div class="panel-header">
+            <h3>LoRA Lab</h3>
+            <span class="panel-sub">All adapters, live blend control</span>
+          </div>
+          <div class="lora-search">
+            <input id="loraSearch" type="search" placeholder="Search LoRAs" />
+          </div>
+          <div class="lora-section">
+            <h4>Selected stack</h4>
+            <div id="loraSelected" class="lora-selected"></div>
+          </div>
+          <div class="lora-section">
+            <h4>Library</h4>
+            <div id="loraLibrary" class="lora-library"></div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="panel output">
+        <div class="panel-header">
+          <h3>Render Vault</h3>
+          <span class="panel-sub">Exports and history</span>
+        </div>
+        <div class="output-actions">
+          <a class="btn ghost" id="downloadBtn" href="#" download hidden>Download MP4</a>
+          <span class="status-pill" id="outputStatus">Idle</span>
+        </div>
+        <div class="output-errors" id="validationErrors"></div>
+        <div class="history" id="historyList"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>LTX-2 studio for Chutes. LoRAs powered by Lightricks.</span>
+      <span>Need help? Check the README for setup and model notes.</span>
+    </footer>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

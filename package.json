@@ -1,0 +1,31 @@
+{
+  "name": "chutes-ltx-video-studio",
+  "version": "1.0.0",
+  "description": "LTX-2 video generation studio for Chutes",
+  "type": "module",
+  "main": "src/server.js",
+  "bin": {
+    "ltx-studio": "src/cli.js"
+  },
+  "scripts": {
+    "dev": "node src/server.js",
+    "dev:cli": "node src/cli.js",
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^14.0.2",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "supertest": "^7.2.2"
+  }
+}
