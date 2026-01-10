@@ -203,6 +203,11 @@ body {
   justify-content: center;
 }
 
+.btn[hidden],
+[hidden] {
+  display: none !important;
+}
+
 .btn.primary {
   background: var(--moss);
   color: #10151b;
