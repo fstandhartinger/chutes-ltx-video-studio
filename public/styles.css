@@ -589,6 +589,17 @@ body {
   font-size: 0.8rem;
 }
 
+.footer a {
+  color: var(--moss);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.footer a:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
 @media (max-width: 1200px) {
   .studio-grid {
     grid-template-columns: 1fr;

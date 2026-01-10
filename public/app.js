@@ -95,13 +95,13 @@ function renderAuthStatus() {
       : 'rgba(250,93,25,0.2)';
     elements.authScope.style.color = state.auth.hasInvokeScope ? '#63d297' : '#fa5d19';
     elements.authUser.textContent = state.auth.user?.username || 'Chutes user';
+    elements.authScope.hidden = false;
+    elements.authUser.hidden = false;
     elements.loginBtn.hidden = true;
     elements.logoutBtn.hidden = false;
   } else {
-    elements.authScope.textContent = 'Signed out';
-    elements.authScope.style.background = 'rgba(99,210,151,0.1)';
-    elements.authScope.style.color = '#63d297';
-    elements.authUser.textContent = 'Guest';
+    elements.authScope.hidden = true;
+    elements.authUser.hidden = true;
     elements.loginBtn.hidden = false;
     elements.logoutBtn.hidden = true;
   }
@@ -420,6 +420,12 @@ function validatePayload(payload) {
 }
 
 async function handleGenerate() {
+  // Require sign-in before generating
+  if (!state.auth.authenticated) {
+    window.location.href = `/auth/login?returnTo=${encodeURIComponent('/')}`;
+    return;
+  }
+
   elements.generateBtn.disabled = true;
   setStatus('Rendering in progress...');
   setOutputStatus('Rendering', true);

@@ -22,11 +22,11 @@
       </div>
       <div class="auth-panel">
         <div class="auth-meta" id="authStatus">
-          <span class="status-pill" id="authScope">Signed out</span>
-          <span class="status-user" id="authUser">Guest</span>
+          <span class="status-pill" id="authScope" hidden>Signed in</span>
+          <span class="status-user" id="authUser" hidden>Guest</span>
         </div>
         <div class="auth-actions">
-          <button class="btn ghost" id="loginBtn">Sign in with Chutes</button>
+          <button class="btn primary" id="loginBtn">Sign in with Chutes</button>
           <button class="btn ghost" id="logoutBtn" hidden>Sign out</button>
         </div>
       </div>
@@ -35,16 +35,11 @@
     <main class="studio">
       <section class="hero">
         <div>
-          <h2>Direct the shot. Dial the motion. Shape the LoRAs.</h2>
+          <h2>Direct the shot.</h2>
           <p>
-            Build cinematic clips with LTX-2 using prompt-first direction, keyframe
-            interpolation, IC-LoRA control, and camera LoRAs in one studio workflow.
+            Build cinematic clips with LTX-2 using prompts, keyframe interpolation,
+            detailed control via LoRAs, in one studio workflow.
           </p>
-        </div>
-        <div class="hero-badges">
-          <div class="badge">Pipeline-aware validation</div>
-          <div class="badge">LoRA stacking</div>
-          <div class="badge">Chutes IDP ready</div>
         </div>
       </section>
 
@@ -221,7 +216,7 @@
 
     <footer class="footer">
       <span>LTX-2 studio for Chutes. LoRAs powered by Lightricks.</span>
-      <span>Need help? Check the README for setup and model notes.</span>
+      <span>This is an open-source example of using LTX-2 via Chutes. <a href="https://github.com/fstandhartinger/chutes-ltx-video-studio" target="_blank" rel="noopener">View on GitHub</a></span>
     </footer>
 
     <script type="module" src="/app.js"></script>
