@@ -18,26 +18,19 @@ export async function invokeLtx2({
   chuteHost,
   timeoutMs = 10 * 60 * 1000,
 }) {
-  const useUserToken = Boolean(accessToken);
-  if (!useUserToken && !apiKey) {
-    throw new Error('Missing CHUTES_API_KEY and no user token available.');
+  // Always use the API key for chute invocation.
+  // OAuth tokens are used for user authentication, but chute calls go through the API key.
+  if (!apiKey) {
+    throw new Error('Missing CHUTES_API_KEY.');
   }
 
   const endpoint = '/generate';
-  const targetUrl = useUserToken
-    ? new URL(endpoint, idpHost).toString()
-    : `${baseUrl.replace(/\/$/, '')}${endpoint}`;
+  const targetUrl = `${baseUrl.replace(/\/$/, '')}${endpoint}`;
 
   const headers = {
     'Content-Type': 'application/json',
+    Authorization: `Bearer ${apiKey}`,
   };
-
-  if (useUserToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-    headers.Host = chuteHost;
-  } else {
-    headers.Authorization = `Bearer ${apiKey}`;
-  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
