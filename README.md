@@ -2,6 +2,84 @@
 
 A full-stack video generation studio for the LTX-2 chute on Chutes. It ships with a CLI for testing every feature first, then the same core generation logic is used by a web UI styled in the Chutes dark design language.
 
+## Quickstart for Chutes API users (LTX-2 direct)
+
+Set your key:
+```bash
+export CHUTES_API_KEY="your-key"
+```
+
+Minimal text-to-video request:
+```bash
+curl -X POST "https://chutes-ltx-2.chutes.ai/generate" \
+  -H "Authorization: Bearer $CHUTES_API_KEY" \
+  -H "Content-Type: application/json" \
+  -o output.mp4 \
+  -d '{
+    "prompt": "A slow dolly-in over neon dunes at dusk",
+    "negative_prompt": "",
+    "width": 768,
+    "height": 512,
+    "num_frames": 48,
+    "frame_rate": 24,
+    "num_inference_steps": 20,
+    "cfg_guidance_scale": 3.0,
+    "seed": 42
+  }'
+```
+
+Image-to-video via URL:
+```bash
+curl -X POST "https://chutes-ltx-2.chutes.ai/generate" \
+  -H "Authorization: Bearer $CHUTES_API_KEY" \
+  -H "Content-Type: application/json" \
+  -o output.mp4 \
+  -d '{
+    "prompt": "The subject turns toward camera",
+    "image_url": "https://example.com/keyframe.png",
+    "image_frame_index": 0,
+    "image_strength": 1.0,
+    "width": 768,
+    "height": 512,
+    "num_frames": 48,
+    "frame_rate": 24,
+    "num_inference_steps": 20,
+    "cfg_guidance_scale": 3.0,
+    "seed": 7
+  }'
+```
+
+Video-to-video (IC LoRA pipeline):
+```bash
+curl -X POST "https://chutes-ltx-2.chutes.ai/generate" \
+  -H "Authorization: Bearer $CHUTES_API_KEY" \
+  -H "Content-Type: application/json" \
+  -o output.mp4 \
+  -d '{
+    "prompt": "A moody cinematic grade",
+    "video_url": "https://example.com/input.mp4",
+    "video_strength": 1.0,
+    "pipeline": "ic_lora",
+    "loras": [{"name": "canny-control", "strength": 1.0}],
+    "width": 768,
+    "height": 512,
+    "num_frames": 48,
+    "frame_rate": 24,
+    "num_inference_steps": 20,
+    "seed": 42
+  }'
+```
+
+LoRA names supported by this chute:
+- IC LoRAs: `canny-control`, `depth-control`, `detailer`, `pose-control`
+- Camera LoRAs: `camera-dolly-in`, `camera-dolly-out`, `camera-dolly-left`, `camera-dolly-right`, `camera-jib-down`, `camera-jib-up`, `camera-static`
+
+Constraints to keep in mind:
+- Width/height divisible by 64.
+- `num_frames <= 121` and `num_frames * num_inference_steps <= 10000`.
+- Up to 8 image conditions total (primary + keyframes).
+- Inputs are capped at 10 MB per image/video (base64 or remote fetch).
+
 ## Why LTX-2
 
 LTX-2 is a Lightricks video generation model that supports text-to-video, image-to-video, and video-to-video workflows. The public model card highlights a distilled variant and multiple LoRA adapters to control camera motion and IC (image conditioning) structure. This studio exposes the full adapter library and pipeline modes in one workflow.
@@ -24,7 +102,7 @@ Reference model card: `https://huggingface.co/Lightricks/LTX-2`
 - `public/`: static UI assets.
 - `tests/`: unit + integration tests.
 
-## Setup
+## Local setup
 
 ```bash
 npm install
@@ -79,7 +157,7 @@ node src/cli.js generate \
   --keyframe /path/b.png:40:1.0
 ```
 
-## Web API
+## Web API (this studio)
 
 - `GET /api/loras` → LoRA library metadata.
 - `POST /api/generate` → LTX-2 generation request (JSON body mirrors chute input).
