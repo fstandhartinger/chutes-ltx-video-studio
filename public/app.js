@@ -60,13 +60,160 @@ const elements = {
   logoutBtn: document.getElementById('logoutBtn'),
 };
 
+let renderStartTime = null;
+let progressInterval = null;
+
 function setStatus(message) {
   elements.statusText.textContent = message;
 }
 
-function setOutputStatus(message, isActive = false) {
+function setOutputStatus(message, type = 'idle') {
   elements.outputStatus.textContent = message;
-  elements.outputStatus.style.color = isActive ? '#63d297' : '#d1d5db';
+  elements.outputStatus.className = 'status-pill';
+  
+  switch (type) {
+    case 'active':
+      elements.outputStatus.classList.add('status-active');
+      break;
+    case 'error':
+      elements.outputStatus.classList.add('status-error');
+      break;
+    case 'success':
+      elements.outputStatus.classList.add('status-success');
+      break;
+    default:
+      // idle - default styling
+      break;
+  }
+}
+
+function formatElapsedTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+}
+
+function startProgressTimer() {
+  renderStartTime = Date.now();
+  updateProgressDisplay();
+  progressInterval = setInterval(updateProgressDisplay, 1000);
+}
+
+function stopProgressTimer() {
+  if (progressInterval) {
+    clearInterval(progressInterval);
+    progressInterval = null;
+  }
+  renderStartTime = null;
+}
+
+function updateProgressDisplay() {
+  if (!renderStartTime) return;
+  const elapsed = Math.floor((Date.now() - renderStartTime) / 1000);
+  const timeStr = formatElapsedTime(elapsed);
+  
+  // Update status with elapsed time and helpful message
+  let message = `Rendering... ${timeStr}`;
+  if (elapsed >= 30) {
+    message += ' (LTX-2 typically takes 2-4 minutes)';
+  }
+  setStatus(message);
+}
+
+function parseErrorDetail(detail) {
+  // Try to parse nested JSON in error detail
+  if (typeof detail === 'string') {
+    try {
+      const parsed = JSON.parse(detail);
+      if (parsed.detail) {
+        return parsed.detail;
+      }
+      return detail;
+    } catch {
+      return detail;
+    }
+  }
+  return String(detail || 'Unknown error');
+}
+
+function categorizeError(status, detail) {
+  const detailLower = (detail || '').toLowerCase();
+  
+  if (status === 429 || detailLower.includes('maximum capacity') || detailLower.includes('rate limit')) {
+    return {
+      type: 'capacity',
+      title: 'Model at Capacity',
+      message: detail,
+      suggestion: 'The LTX-2 model is currently busy. Please wait a moment and try again.',
+      icon: '⏳'
+    };
+  }
+  
+  if (status === 503 || detailLower.includes('no infrastructure') || detailLower.includes('unavailable')) {
+    return {
+      type: 'unavailable',
+      title: 'Service Unavailable',
+      message: detail,
+      suggestion: 'The video generation service is temporarily unavailable. Please try again in a few minutes.',
+      icon: '🔧'
+    };
+  }
+  
+  if (status === 401 || status === 403 || detailLower.includes('unauthorized') || detailLower.includes('api key')) {
+    return {
+      type: 'auth',
+      title: 'Authentication Error',
+      message: detail,
+      suggestion: 'There was an issue with authentication. Try signing out and back in.',
+      icon: '🔐'
+    };
+  }
+  
+  if (status === 400 || detailLower.includes('validation') || detailLower.includes('invalid')) {
+    return {
+      type: 'validation',
+      title: 'Invalid Request',
+      message: detail,
+      suggestion: 'Check your input parameters and try again.',
+      icon: '⚠️'
+    };
+  }
+  
+  if (detailLower.includes('timeout') || detailLower.includes('timed out')) {
+    return {
+      type: 'timeout',
+      title: 'Request Timeout',
+      message: detail,
+      suggestion: 'The request took too long. Try with fewer frames or lower resolution.',
+      icon: '⏱️'
+    };
+  }
+  
+  return {
+    type: 'unknown',
+    title: 'Generation Failed',
+    message: detail,
+    suggestion: 'An unexpected error occurred. Please try again.',
+    icon: '❌'
+  };
+}
+
+function displayError(status, rawDetail) {
+  const detail = parseErrorDetail(rawDetail);
+  const errorInfo = categorizeError(status, detail);
+  
+  const errorHtml = `
+    <div class="error-card error-${errorInfo.type}">
+      <div class="error-header">
+        <span class="error-icon">${errorInfo.icon}</span>
+        <strong>${errorInfo.title}</strong>
+      </div>
+      <p class="error-detail">${errorInfo.message}</p>
+      <p class="error-suggestion">${errorInfo.suggestion}</p>
+    </div>
+  `;
+  
+  elements.validationErrors.innerHTML = errorHtml;
 }
 
 function updateMetrics() {
@@ -427,19 +574,22 @@ async function handleGenerate() {
   }
 
   elements.generateBtn.disabled = true;
-  setStatus('Rendering in progress...');
-  setOutputStatus('Rendering', true);
-  elements.validationErrors.textContent = '';
-
+  elements.validationErrors.innerHTML = '';
+  
   const payload = buildPayload();
   const errors = validatePayload(payload);
   if (errors.length) {
-    elements.validationErrors.innerHTML = errors.map((err) => `• ${err}`).join('<br />');
+    elements.validationErrors.innerHTML = errors.map((err) => `<div class="validation-error">• ${err}</div>`).join('');
     elements.generateBtn.disabled = false;
-    setStatus('Validation failed.');
-    setOutputStatus('Validation error');
+    setStatus('Validation failed. Please fix the errors above.');
+    setOutputStatus('Validation Error', 'error');
     return;
   }
+
+  // Start progress tracking
+  startProgressTimer();
+  setOutputStatus('Rendering...', 'active');
+  elements.generateBtn.textContent = 'Generating...';
 
   try {
     const response = await fetch('/api/generate', {
@@ -452,7 +602,13 @@ async function handleGenerate() {
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      throw new Error(data.detail || data.error || 'Generation failed.');
+      const detail = data.detail || data.error || 'Generation failed.';
+      displayError(response.status, detail);
+      
+      const elapsed = renderStartTime ? Math.floor((Date.now() - renderStartTime) / 1000) : 0;
+      setStatus(`Failed after ${formatElapsedTime(elapsed)}.`);
+      setOutputStatus('Error', 'error');
+      return;
     }
 
     const blob = await response.blob();
@@ -465,14 +621,19 @@ async function handleGenerate() {
     elements.downloadBtn.hidden = false;
 
     addHistoryItem(url);
-    setStatus('Render complete.');
-    setOutputStatus('Complete', true);
+    
+    const elapsed = renderStartTime ? Math.floor((Date.now() - renderStartTime) / 1000) : 0;
+    setStatus(`Render complete in ${formatElapsedTime(elapsed)}!`);
+    setOutputStatus('Complete', 'success');
   } catch (error) {
-    elements.validationErrors.textContent = error.message;
+    // Network or unexpected errors
+    displayError(0, error.message || 'Network error. Please check your connection.');
     setStatus('Render failed.');
-    setOutputStatus('Error');
+    setOutputStatus('Error', 'error');
   } finally {
+    stopProgressTimer();
     elements.generateBtn.disabled = false;
+    elements.generateBtn.textContent = 'Generate video';
   }
 }
 

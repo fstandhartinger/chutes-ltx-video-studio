@@ -171,10 +171,36 @@ body {
   align-items: center;
   padding: 4px 12px;
   border-radius: 999px;
-  background: rgba(99, 210, 151, 0.1);
-  color: var(--moss);
+  background: rgba(156, 163, 175, 0.15);
+  color: var(--ink-300);
   font-size: 0.75rem;
   letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.status-pill.status-active {
+  background: rgba(99, 210, 151, 0.15);
+  color: var(--moss);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-pill.status-success {
+  background: rgba(99, 210, 151, 0.2);
+  color: var(--moss);
+}
+
+.status-pill.status-error {
+  background: rgba(250, 93, 25, 0.15);
+  color: var(--papaya);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 
 .status-user {
@@ -389,8 +415,14 @@ body {
 }
 
 .status {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--ink-300);
+  padding: 8px 12px;
+  background: rgba(17, 23, 38, 0.6);
+  border-radius: 12px;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
 }
 
 .preview {
@@ -566,8 +598,68 @@ body {
 
 .output-errors {
   margin-bottom: 12px;
-  color: var(--papaya);
   font-size: 0.85rem;
+}
+
+.validation-error {
+  color: var(--papaya);
+  margin-bottom: 4px;
+}
+
+.error-card {
+  background: rgba(250, 93, 25, 0.1);
+  border: 1px solid rgba(250, 93, 25, 0.3);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.error-card.error-capacity {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: rgba(255, 193, 7, 0.3);
+}
+
+.error-card.error-capacity .error-header strong {
+  color: #ffc107;
+}
+
+.error-card.error-unavailable {
+  background: rgba(156, 163, 175, 0.1);
+  border-color: rgba(156, 163, 175, 0.3);
+}
+
+.error-card.error-unavailable .error-header strong {
+  color: #9ca3af;
+}
+
+.error-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.error-icon {
+  font-size: 1.2rem;
+}
+
+.error-header strong {
+  color: var(--papaya);
+  font-size: 1rem;
+}
+
+.error-detail {
+  margin: 0 0 8px;
+  color: var(--ink-200);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.error-suggestion {
+  margin: 0;
+  color: var(--ink-300);
+  font-size: 0.8rem;
+  font-style: italic;
 }
 
 .history {
