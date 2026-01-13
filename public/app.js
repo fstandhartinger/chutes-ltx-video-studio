@@ -1,5 +1,5 @@
 const MAX_IMAGE_CONDITIONS = 8;
-const MAX_NUM_FRAMES = 121;
+const MAX_NUM_FRAMES = 481;
 const MAX_WORK_UNITS = 10000;
 
 const state = {
@@ -28,6 +28,7 @@ const elements = {
   steps: document.getElementById('stepsInput'),
   cfg: document.getElementById('cfgInput'),
   enhance: document.getElementById('enhanceToggle'),
+  distilled: document.getElementById('distilledToggle'),
   durationLabel: document.getElementById('durationLabel'),
   workUnits: document.getElementById('workUnits'),
   generateBtn: document.getElementById('generateBtn'),
@@ -496,6 +497,7 @@ function buildPayload() {
     cfg_guidance_scale: Number(elements.cfg.value),
     seed: Number(elements.seed.value),
     enhance_prompt: elements.enhance.checked,
+    distilled: elements.distilled.checked,
     pipeline: elements.pipeline.value || null,
     loras,
     images: state.keyframes.map((frame) => ({
@@ -532,8 +534,13 @@ function validatePayload(payload) {
   if (!payload.prompt.trim()) {
     errors.push('Prompt is required.');
   }
-  if (payload.width % 64 !== 0 || payload.height % 64 !== 0) {
-    errors.push('Width and height must be divisible by 64.');
+  if (payload.width % 64 !== 0) {
+    const suggestedWidth = Math.round(payload.width / 64) * 64;
+    errors.push(`Width must be divisible by 64. Try ${suggestedWidth} instead of ${payload.width}.`);
+  }
+  if (payload.height % 64 !== 0) {
+    const suggestedHeight = Math.round(payload.height / 64) * 64;
+    errors.push(`Height must be divisible by 64. Try ${suggestedHeight} instead of ${payload.height}.`);
   }
   if (payload.num_frames > MAX_NUM_FRAMES) {
     errors.push(`num_frames exceeds max ${MAX_NUM_FRAMES}.`);
