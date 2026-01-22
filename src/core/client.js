@@ -30,6 +30,7 @@ export async function invokeLtx2({
   const headers = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${apiKey}`,
+    'X-Identifier': 'chutes-ltx-video-studio',
   };
 
   const controller = new AbortController();
